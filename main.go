@@ -52,11 +52,11 @@ func count(source string) (int, error) {
 func main() {
 	var (
 		semaphore = make(chan struct{}, WorkersCount)
-		total     	uint64
-		wg        	sync.WaitGroup
+		total     uint64
+		wg        sync.WaitGroup
+		scanner   = bufio.NewScanner(os.Stdin)
 	)
 
-	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		for _, source := range strings.Split(scanner.Text(), "\n") {
 			wg.Add(1)
@@ -76,7 +76,6 @@ func main() {
 
 				fmt.Fprintf(os.Stdout, "Count for %s: %d\n", source, count)
 				atomic.AddUint64(&total, uint64(count))
-
 			}(source)
 		}
 	}
@@ -86,5 +85,7 @@ func main() {
 	}
 
 	wg.Wait()
+	close(semaphore)
+
 	fmt.Printf("Total: %d\n", total)
 }
